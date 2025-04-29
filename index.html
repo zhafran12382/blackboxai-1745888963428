@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Whatsapp NFBS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <link rel="stylesheet" href="styles/main.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.ably.io/lib/ably.min-1.js"></script>
+  <script type="module">
+    import { initUI } from './js/ui.js';
+    document.addEventListener('DOMContentLoaded', initUI);
+  </script>
+</head>
+<body class="h-screen flex items-center justify-center">
+  <!-- Login Page -->
+  <div id="login-page" class="w-full max-w-md p-8 login-container animate-fadeInUp">
+    <h1 class="text-5xl font-extrabold mb-10 text-center text-whatsapp drop-shadow-lg">Whatsapp NFBS</h1>
+    <form id="login-form" class="space-y-8">
+      <div>
+        <label for="username" class="block text-gray-900 font-semibold mb-3 text-lg">Username</label>
+        <input
+          type="text"
+          id="username"
+          name="username"
+          required
+          class="login-input w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-green-300 focus:ring-opacity-70 transition duration-300 placeholder-gray-400 text-lg shadow-sm"
+          autocomplete="off"
+          placeholder="Choose your username"
+        />
+        <p id="username-error" class="text-red-600 text-sm mt-2 hidden"></p>
+      </div>
+      <div>
+        <label for="password" class="block text-gray-900 font-semibold mb-3 text-lg">Password</label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          required
+          class="login-input w-full px-5 py-4 border border-gray-300 rounded-2xl placeholder-gray-400 text-lg shadow-sm"
+          autocomplete="off"
+          placeholder="Enter password"
+        />
+        <p id="password-error" class="text-red-600 text-sm mt-2 hidden"></p>
+      </div>
+      <button
+        type="submit"
+        class="w-full bg-whatsapp text-white py-4 rounded-2xl hover:bg-whatsapp hover:shadow-xl transform hover:scale-105 duration-300 font-semibold text-lg"
+      >
+        Log In
+      </button>
+    </form>
+  </div>
+
+  <!-- Chat Page -->
+  <div id="chat-page" class="hidden h-screen w-full max-w-4xl mx-auto flex-col bg-white rounded-lg shadow-lg overflow-hidden">
+    <!-- Header -->
+    <header class="flex items-center justify-between bg-whatsapp text-white px-6 py-4 shadow-md">
+      <h2 class="text-2xl font-extrabold">Whatsapp NFBS</h2>
+      <button id="hamburger-btn" aria-label="Menu" class="focus:outline-none hover:text-green-100 transition">
+        <i class="fas fa-bars text-3xl"></i>
+      </button>
+    </header>
+
+    <main class="flex-1 flex flex-col">
+      <div id="chat-header" class="bg-gray-100 px-6 py-3 border-b border-gray-300 flex items-center justify-between">
+        <h3 id="chat-title" class="text-xl font-semibold">Global Chat</h3>
+      </div>
+      <div id="chat-messages" class="chat-messages flex-1 overflow-y-auto p-6 space-y-4 bg-white"></div>
+      <form id="message-form" class="flex items-center border-t border-gray-300 p-4 bg-gray-50">
+        <input
+          type="text"
+          id="message-input"
+          placeholder="Type a message"
+          class="message-input flex-1"
+          autocomplete="off"
+          required
+        />
+        <input
+          type="file"
+          id="file-input"
+          class="hidden"
+          accept="image/*,video/*,audio/*"
+        />
+        <button
+          type="button"
+          id="attach-btn"
+          class="ml-4 bg-whatsapp text-white p-3 rounded-full hover:bg-whatsapp hover:shadow-lg transition"
+          aria-label="Attach file"
+        >
+          <i class="fas fa-paperclip"></i>
+        </button>
+        <button
+          type="submit"
+          class="ml-4 bg-whatsapp text-white px-6 py-3 rounded-lg hover:bg-whatsapp hover:shadow-lg transition flex items-center"
+        >
+          <i class="fas fa-paper-plane mr-2"></i>
+          Send
+        </button>
+      </form>
+    </main>
+
+    <!-- Hamburger Menu Modal -->
+    <div
+      id="hamburger-menu"
+      class="fixed top-0 right-0 h-full w-72 bg-white shadow-2xl transform translate-x-full transition-transform duration-300 z-50"
+      aria-hidden="true"
+    >
+      <div class="p-6 flex flex-col h-full">
+        <div class="mb-6">
+          <h4 class="text-2xl font-extrabold mb-4">Profile</h4>
+          <div class="flex items-center space-x-3">
+            <img id="profile-photo" src="" alt="Profile photo" class="w-12 h-12 rounded-full object-cover" />
+            <div>
+              <p id="profile-name" class="font-semibold"></p>
+              <p class="text-sm text-gray-600">ID: <span id="profile-user-id" class="font-mono"></span></p>
+            </div>
+          </div>
+        </div>
+        <nav class="flex-1 overflow-y-auto">
+          <button id="menu-global-chat" class="w-full text-left px-4 py-3 rounded-lg hover:bg-green-100 transition font-semibold mb-4">
+            <i class="fas fa-globe mr-2"></i>
+            Global Chat
+          </button>
+          <div>
+            <label for="menu-add-user-input" class="block text-gray-800 font-semibold mb-2">Add User (ID)</label>
+            <div class="flex space-x-2">
+              <input
+                type="text"
+                id="menu-add-user-input"
+                placeholder="Enter 8-char user ID"
+                class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-green-300 focus:ring-opacity-70 transition"
+                maxlength="8"
+                autocomplete="off"
+              />
+              <button
+                id="menu-add-user-btn"
+                class="bg-whatsapp text-white p-3 rounded-lg hover:bg-whatsapp hover:shadow-lg transition"
+                aria-label="Add user"
+              >
+                <i class="fas fa-plus"></i>
+              </button>
+            </div>
+          </div>
+          <div id="menu-private-users-list" class="mt-6 space-y-3" aria-label="Private chat users menu">
+            <!-- Dynamically added private users -->
+          </div>
+        </nav>
+        <div class="mt-6">
+          <button
+            id="logout-btn"
+            class="w-full bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition shadow-lg hover:shadow-xl flex items-center justify-center"
+          >
+            <i class="fas fa-sign-out-alt mr-2"></i>
+            Log Out
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Logout Confirmation Modal -->
+    <div
+      id="logout-modal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-60"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="logout-modal-title"
+    >
+      <div class="bg-white rounded-lg p-8 w-96 max-w-full shadow-lg animate-fadeIn">
+        <h5 id="logout-modal-title" class="text-2xl font-extrabold mb-6">Confirm Log Out</h5>
+        <p class="mb-6 text-lg">Enter password to confirm log out:</p>
+        <input
+          type="password"
+          id="logout-confirm-input"
+          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-green-300 focus:ring-opacity-70 transition"
+          autocomplete="off"
+          placeholder="Enter password"
+        />
+        <p id="logout-error" class="text-red-600 text-sm mt-2 hidden"></p>
+        <div class="mt-8 flex justify-end space-x-4">
+          <button 
+            type="button"
+            id="logout-cancel-btn" 
+            class="px-6 py-3 rounded-lg border border-gray-300 hover:bg-gray-100 transition"
+          >
+            Cancel
+          </button>
+          <button 
+            type="button"
+            id="logout-confirm-btn" 
+            class="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition shadow-lg"
+          >
+            Log Out
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Audio elements -->
+  <audio id="message-sound" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg" preload="auto"></audio>
+  <audio id="private-message-sound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
+  <audio id="notification-sound" src="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg" preload="auto"></audio>
+</body>
+</html>
